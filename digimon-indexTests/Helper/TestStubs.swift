@@ -32,15 +32,20 @@ extension DigimonDetail {
 }
 
 extension DigimonListResponse {
-    static func stub() -> DigimonListResponse {
+    static func stub(
+        id: Int = 1,
+        name: String = "Agumon",
+        previousPage: String = "",
+        nextPage: String = "https://..."
+    ) -> DigimonListResponse {
         return DigimonListResponse(
             content: [
-                DigimonListItem(id: 1, name: "Agumon", href: "", image: "")
+                DigimonListItem(id: id, name: name, href: "", image: "")
             ],
             pageable: Pageable(
                 currentPage: 0, elementsOnPage: 1,
                 totalElements: 100, totalPages: 5,
-                previousPage: "", nextPage: "https://..."
+                previousPage: previousPage, nextPage: nextPage
             )
         )
     }
