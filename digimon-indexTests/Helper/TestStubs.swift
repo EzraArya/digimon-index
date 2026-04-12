@@ -30,3 +30,18 @@ extension DigimonDetail {
         )
     }
 }
+
+extension DigimonListResponse {
+    static func stub() -> DigimonListResponse {
+        return DigimonListResponse(
+            content: [
+                DigimonListItem(id: 1, name: "Agumon", href: "", image: "")
+            ],
+            pageable: Pageable(
+                currentPage: 0, elementsOnPage: 1,
+                totalElements: 100, totalPages: 5,
+                previousPage: "", nextPage: "https://..."
+            )
+        )
+    }
+}
