@@ -36,7 +36,7 @@ final class DigimonRepositoryTests: XCTestCase {
         
         mockNetworkService.result = expected
         
-        let response = try await sut.getDigimonList(page: 0, pageSize: 20)
+        let response = try await sut.getDigimonList(page: 0, pageSize: 8)
         
         XCTAssertEqual(response.content.count, 1)
         XCTAssertEqual(response.content.first?.name, "Agumon")
@@ -47,7 +47,7 @@ final class DigimonRepositoryTests: XCTestCase {
         mockNetworkService.error = NetworkError.serverError(statusCode: 503)
         
         do {
-            _ = try await sut.getDigimonList(page: 0, pageSize: 20)
+            _ = try await sut.getDigimonList(page: 0, pageSize: 8)
             XCTFail("Expected error")
         } catch let error as NetworkError {
                     XCTAssertEqual(error, .serverError(statusCode: 503))

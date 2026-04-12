@@ -8,14 +8,14 @@
 import Foundation
 
 final class DigimonRepository: DigimonRepositoryProtocol {
-    let networkService: NetworkServiceProtocol
+    private let networkService: NetworkServiceProtocol
     
     init(networkService: NetworkServiceProtocol) {
         self.networkService = networkService
     }
     
-    func getDigimonList(page: Int, pageSize: Int, name: String?) async throws -> DigimonListResponse {
-        try await networkService.request(endpoint: .digimonList(page: page, pageSize: pageSize, name: name))
+    func getDigimonList(page: Int, pageSize: Int, filter: DigimonSearchFilter?) async throws -> DigimonListResponse {
+        try await networkService.request(endpoint: .digimonList(page: page, pageSize: pageSize, filter: filter))
     }
     
     func getDigimonDetail(id: Int) async throws -> DigimonDetail {

@@ -6,12 +6,12 @@
 //
 
 protocol DigimonRepositoryProtocol {
-    func getDigimonList(page: Int, pageSize: Int, name: String?) async throws -> DigimonListResponse
+    func getDigimonList(page: Int, pageSize: Int, filter: DigimonSearchFilter?) async throws -> DigimonListResponse
     func getDigimonDetail(id: Int) async throws -> DigimonDetail
 }
 
 extension DigimonRepositoryProtocol {
     func getDigimonList(page: Int, pageSize: Int) async throws -> DigimonListResponse {
-        try await getDigimonList(page: page, pageSize: pageSize, name: nil)
+        try await getDigimonList(page: page, pageSize: pageSize, filter: nil)
     }
 }

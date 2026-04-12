@@ -8,7 +8,7 @@
 import Foundation
 
 enum APIEndpoint {
-    case digimonList(page: Int, pageSize: Int, name: String? = nil)
+    case digimonList(page: Int, pageSize: Int, filter: DigimonSearchFilter? = nil)
     case digimonDetail(id: Int)
     
     var url: URL? {
@@ -17,14 +17,18 @@ enum APIEndpoint {
         components.host = "digi-api.com"
         
         switch self {
-        case .digimonList(let page, let pageSize, let name):
+        case .digimonList(let page, let pageSize, let filter):
             components.path = "/api/v1/digimon"
             var queryItems = [
                 URLQueryItem(name: "page", value: "\(page)"),
                 URLQueryItem(name: "pageSize", value: "\(pageSize)")
             ]
-            if let name = name {
-                queryItems.append(URLQueryItem(name: "name", value: name))
+            if let filter = filter {
+                if let name = filter.name { queryItems.append(URLQueryItem(name: "name", value: name)) }
+                if let type = filter.type { queryItems.append(URLQueryItem(name: "type", value: type.rawValue)) }
+                if let attribute = filter.attribute { queryItems.append(URLQueryItem(name: "attribute", value: attribute.rawValue)) }
+                if let level = filter.level { queryItems.append(URLQueryItem(name: "level", value: level.rawValue)) }
+                if let field = filter.field { queryItems.append(URLQueryItem(name: "field", value: field.rawValue)) }
             }
             components.queryItems = queryItems
         case .digimonDetail(let id):
