@@ -25,10 +25,9 @@ enum APIEndpoint {
             ]
             if let filter = filter {
                 if let name = filter.name { queryItems.append(URLQueryItem(name: "name", value: name)) }
-                if let type = filter.type { queryItems.append(URLQueryItem(name: "type", value: type.rawValue)) }
+                if let xAntibody = filter.xAntibody { queryItems.append(URLQueryItem(name: "xAntibody", value: String(xAntibody))) }
                 if let attribute = filter.attribute { queryItems.append(URLQueryItem(name: "attribute", value: attribute.rawValue)) }
                 if let level = filter.level { queryItems.append(URLQueryItem(name: "level", value: level.rawValue)) }
-                if let field = filter.field { queryItems.append(URLQueryItem(name: "field", value: field.rawValue)) }
             }
             components.queryItems = queryItems
         case .digimonDetail(let id):
@@ -38,3 +37,4 @@ enum APIEndpoint {
         return components.url
     }
 }
+

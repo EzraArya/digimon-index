@@ -12,7 +12,7 @@ final class DigimonListViewController: UIViewController {
     // MARK: - Properties
     private let viewModel: DigimonListViewModel
     private var dataSource: UICollectionViewDiffableDataSource<Int, Int>!
-    private var activeFilter = DigimonSearchFilter(name: nil, type: nil, attribute: nil, level: nil, field: nil)
+    private var activeFilter = DigimonSearchFilter(name: nil, xAntibody: nil, attribute: nil, level: nil)
     
     // MARK: - UI Components
     
@@ -126,23 +126,23 @@ final class DigimonListViewController: UIViewController {
         filterScrollView.addSubview(filterStackView)
         view.addSubview(collectionView)
         
-        let typeButton = createFilterButton(title: "Type", items: TypeFilter.allCases.map { $0.rawValue }) { [weak self] selected in
-            self?.activeFilter.type = selected.flatMap { TypeFilter(rawValue: $0) }
-        }
         let attributeButton = createFilterButton(title: "Attribute", items: AttributeFilter.allCases.map { $0.rawValue }) { [weak self] selected in
             self?.activeFilter.attribute = selected.flatMap { AttributeFilter(rawValue: $0) }
         }
         let levelButton = createFilterButton(title: "Level", items: LevelFilter.allCases.map { $0.rawValue }) { [weak self] selected in
             self?.activeFilter.level = selected.flatMap { LevelFilter(rawValue: $0) }
         }
-        let fieldButton = createFilterButton(title: "Field", items: FieldFilter.allCases.map { $0.rawValue }) { [weak self] selected in
-            self?.activeFilter.field = selected.flatMap { FieldFilter(rawValue: $0) }
+        let xAntibodyButton = createFilterButton(title: "X-Antibody", items: ["Yes", "No"]) { [weak self] selected in
+            if let selected = selected {
+                self?.activeFilter.xAntibody = (selected == "Yes")
+            } else {
+                self?.activeFilter.xAntibody = nil
+            }
         }
         
-        filterStackView.addArrangedSubview(typeButton)
         filterStackView.addArrangedSubview(attributeButton)
         filterStackView.addArrangedSubview(levelButton)
-        filterStackView.addArrangedSubview(fieldButton)
+        filterStackView.addArrangedSubview(xAntibodyButton)
         
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(activityIndicator)
@@ -311,11 +311,10 @@ extension DigimonListViewController {
         searchBar.text = ""
         activeFilter = DigimonSearchFilter() 
         
-        if let buttons = filterStackView.arrangedSubviews as? [UIButton], buttons.count == 4 {
-            buttons[0].configuration?.title = "Type"
-            buttons[1].configuration?.title = "Attribute"
-            buttons[2].configuration?.title = "Level"
-            buttons[3].configuration?.title = "Field"
+        if let buttons = filterStackView.arrangedSubviews as? [UIButton], buttons.count == 3 {
+            buttons[0].configuration?.title = "Attribute"
+            buttons[1].configuration?.title = "Level"
+            buttons[2].configuration?.title = "X-Antibody"
         }
         
         Task { await viewModel.fetchDigimons(filter: activeFilter) }

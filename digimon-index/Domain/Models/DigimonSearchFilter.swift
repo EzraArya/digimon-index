@@ -7,14 +7,9 @@
 
 struct DigimonSearchFilter: Equatable {
     var name: String?
-    var type: TypeFilter?
+    var xAntibody: Bool?
     var attribute: AttributeFilter?
     var level: LevelFilter?
-    var field: FieldFilter?
-}
-
-enum TypeFilter: String, CaseIterable, Codable {
-    case data = "Data"
 }
 
 enum AttributeFilter: String, CaseIterable, Codable {
@@ -24,8 +19,3 @@ enum AttributeFilter: String, CaseIterable, Codable {
 enum LevelFilter: String, CaseIterable, Codable {
     case data = "Data"
 }
-
-enum FieldFilter: String, CaseIterable, Codable {
-    case data = "Data"
-}
-
