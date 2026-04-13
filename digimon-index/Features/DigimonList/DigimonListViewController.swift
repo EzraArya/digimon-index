@@ -7,20 +7,75 @@
 
 import UIKit
 
-
 final class DigimonListViewController: UIViewController {
     
     // MARK: - Properties
     private let viewModel: DigimonListViewModel
     private var dataSource: UICollectionViewDiffableDataSource<Int, Int>!
+    private var activeFilter = DigimonSearchFilter(name: nil, type: nil, attribute: nil, level: nil, field: nil)
     
     // MARK: - UI Components
+    
     private lazy var searchBar: UISearchBar = {
         let bar = UISearchBar()
         bar.placeholder = "Search Digimon (e.g. Agumon)"
         bar.delegate = self
+        bar.searchBarStyle = .minimal
         bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return bar
+    }()
+    
+    private lazy var searchButton: UIButton = {
+        var config = UIButton.Configuration.filled()
+        config.image = UIImage(systemName: "magnifyingglass")
+        config.imagePlacement = .trailing
+        config.imagePadding = 6
+        config.cornerStyle = .capsule
+        
+        let button = UIButton(configuration: config)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        
+        button.addAction(UIAction { [weak self] _ in
+            self?.performSearch()
+        }, for: .touchUpInside)
+        
+        return button
+    }()
+    
+    private lazy var searchRowStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [searchBar, searchButton])
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+    
+    private lazy var filterStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+    
+    private lazy var filterScrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.showsHorizontalScrollIndicator = false
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.contentInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        return sv
+    }()
+    
+    private lazy var headerStackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [searchRowStackView, filterScrollView])
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
     }()
     
     private lazy var collectionView: UICollectionView = {
@@ -62,18 +117,53 @@ final class DigimonListViewController: UIViewController {
     
     // MARK: - Setup
     private func setupUI() {
-        view.addSubview(searchBar)
+        setupView()
+        setupConstraints()
+    }
+    
+    private func setupView() {
+        view.addSubview(headerStackView)
+        filterScrollView.addSubview(filterStackView)
         view.addSubview(collectionView)
+        
+        let typeButton = createFilterButton(title: "Type", items: TypeFilter.allCases.map { $0.rawValue }) { [weak self] selected in
+            self?.activeFilter.type = selected.flatMap { TypeFilter(rawValue: $0) }
+        }
+        let attributeButton = createFilterButton(title: "Attribute", items: AttributeFilter.allCases.map { $0.rawValue }) { [weak self] selected in
+            self?.activeFilter.attribute = selected.flatMap { AttributeFilter(rawValue: $0) }
+        }
+        let levelButton = createFilterButton(title: "Level", items: LevelFilter.allCases.map { $0.rawValue }) { [weak self] selected in
+            self?.activeFilter.level = selected.flatMap { LevelFilter(rawValue: $0) }
+        }
+        let fieldButton = createFilterButton(title: "Field", items: FieldFilter.allCases.map { $0.rawValue }) { [weak self] selected in
+            self?.activeFilter.field = selected.flatMap { FieldFilter(rawValue: $0) }
+        }
+        
+        filterStackView.addArrangedSubview(typeButton)
+        filterStackView.addArrangedSubview(attributeButton)
+        filterStackView.addArrangedSubview(levelButton)
+        filterStackView.addArrangedSubview(fieldButton)
         
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(activityIndicator)
-        
+    }
+    
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
-            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            headerStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headerStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),            
+            searchRowStackView.heightAnchor.constraint(equalToConstant: 44),
+            searchButton.heightAnchor.constraint(equalToConstant: 36),
+            filterScrollView.heightAnchor.constraint(equalToConstant: 44),
             
-            collectionView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
+            filterStackView.topAnchor.constraint(equalTo: filterScrollView.topAnchor),
+            filterStackView.leadingAnchor.constraint(equalTo: filterScrollView.contentLayoutGuide.leadingAnchor),
+            filterStackView.trailingAnchor.constraint(equalTo: filterScrollView.contentLayoutGuide.trailingAnchor),
+            filterStackView.bottomAnchor.constraint(equalTo: filterScrollView.bottomAnchor),
+            filterStackView.heightAnchor.constraint(equalTo: filterScrollView.heightAnchor),
+            
+            collectionView.topAnchor.constraint(equalTo: headerStackView.bottomAnchor, constant: 8),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -102,10 +192,9 @@ final class DigimonListViewController: UIViewController {
     // MARK: - The Binding
     private func bindViewModel() {
         viewModel.onUpdate = { [weak self] in
-            DispatchQueue.main.async { // Always ensure UI updates are on main thread!
+            DispatchQueue.main.async { 
                 guard let self = self else { return }
                 
-                // Manage spinner
                 if self.viewModel.isLoading && self.viewModel.digimons.isEmpty {
                     self.activityIndicator.startAnimating()
                 } else {
@@ -127,43 +216,29 @@ final class DigimonListViewController: UIViewController {
             }
         }
     }
-    
-    private func showErrorAlert(message: String) {
-        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
 }
 
 // MARK: - Search Bar Delegate (Filter Logic)
 extension DigimonListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.resignFirstResponder()
-        let query = searchBar.text?.trimmingCharacters(in: .whitespaces)
-        
-        // This is where you map your simple text to your DigimonSearchFilter
-        let filter = (query?.isEmpty == false) ? DigimonSearchFilter(name: query) : nil
-        
-        Task { await viewModel.fetchDigimons(filter: filter) }
+        performSearch()
     }
 }
 
 // MARK: - UICollectionView Delegate and FlowLayout Delegate
 extension DigimonListViewController: UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     
-    // Size items based on current collection view width to avoid deprecated UIScreen.main
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let horizontalInsets: CGFloat
         if let flowLayout = collectionViewLayout as? UICollectionViewFlowLayout {
             horizontalInsets = flowLayout.sectionInset.left + flowLayout.sectionInset.right
         } else {
-            horizontalInsets = 32 // fallback to match intended padding
+            horizontalInsets = 32 
         }
         let width = collectionView.bounds.width - horizontalInsets
         return CGSize(width: max(0, width), height: 100)
     }
     
-    // Navigation to Detail Screen
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let digimonId = dataSource.itemIdentifier(for: indexPath) else { return }
         
@@ -179,10 +254,70 @@ extension DigimonListViewController: UICollectionViewDelegate, UICollectionViewD
         let contentHeight = scrollView.contentSize.height
         let scrollViewHeight = scrollView.frame.size.height
         
-        // If we are 150 points from the bottom, fetch next page
+        guard !viewModel.digimons.isEmpty else { return }
+        
         if position > (contentHeight - scrollViewHeight - 150) {
             Task { await viewModel.fetchNextPage() }
         }
     }
 }
 
+extension DigimonListViewController {
+
+    private func createFilterButton(title: String, items: [String], selectionHandler: @escaping (String?) -> Void) -> UIButton {
+        var config = UIButton.Configuration.tinted()
+        config.title = title
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        
+        let button = UIButton(configuration: config)
+        
+        var actions = items.map { item in
+            UIAction(title: item) { _ in
+                button.configuration?.title = "\(item)"
+                selectionHandler(item)
+            }
+        }
+        
+        let clearAction = UIAction(title: "Clear \(title) Filter", attributes: .destructive) { _ in
+            button.configuration?.title = title
+            selectionHandler(nil)
+        }
+        actions.insert(clearAction, at: 0)
+        
+        button.menu = UIMenu(title: "Select \(title)", children: actions)
+        button.showsMenuAsPrimaryAction = true
+        return button
+    }
+    
+    private func performSearch() {
+        searchBar.resignFirstResponder()
+        
+        let query = searchBar.text?.trimmingCharacters(in: .whitespaces)
+        activeFilter.name = (query?.isEmpty == false) ? query : nil
+        
+        Task { await viewModel.fetchDigimons(filter: activeFilter) }
+    }
+
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            self?.resetToDefaultState()
+        })
+        present(alert, animated: true)
+    }
+    
+    private func resetToDefaultState() {
+        searchBar.text = ""
+        activeFilter = DigimonSearchFilter() 
+        
+        if let buttons = filterStackView.arrangedSubviews as? [UIButton], buttons.count == 4 {
+            buttons[0].configuration?.title = "Type"
+            buttons[1].configuration?.title = "Attribute"
+            buttons[2].configuration?.title = "Level"
+            buttons[3].configuration?.title = "Field"
+        }
+        
+        Task { await viewModel.fetchDigimons(filter: activeFilter) }
+    }
+}
