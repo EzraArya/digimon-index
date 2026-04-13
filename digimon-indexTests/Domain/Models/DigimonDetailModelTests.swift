@@ -8,6 +8,7 @@
 import XCTest
 @testable import digimon_index
 
+@MainActor
 final class DigimonDetailModelTests: XCTestCase {
 
     override func setUpWithError() throws {
