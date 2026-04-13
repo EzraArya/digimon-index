@@ -8,6 +8,7 @@
 import XCTest
 @testable import digimon_index
 
+@MainActor
 final class DigimonModelTests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -25,7 +26,7 @@ final class DigimonModelTests: XCTestCase {
                 "name": "Agumon",
                 "href": "https://digi-api.com/api/v1/digimon/1",
                 "image": "https://digi-api.com/images/digimon/w/Agumon.png"
-            },
+            }
             """.data(using: .utf8)!
         
         let item = try JSONDecoder().decode(DigimonListItem.self, from: json)
