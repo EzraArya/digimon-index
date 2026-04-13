@@ -24,10 +24,27 @@ final class NetworkService: NetworkServiceProtocol {
             throw NetworkError.invalidURL
         }
         
-        let (data, response) = try await session.data(from: url)
+        let data: Data
+        let response: URLResponse
+        
+        do {
+            (data, response) = try await session.data(from: url)
+        } catch let error as URLError {
+            if error.code == .notConnectedToInternet {
+                throw NetworkError.noConnection
+            } else {
+                throw NetworkError.unknown(error.localizedDescription)
+            }
+        } catch {
+            throw NetworkError.unknown(error.localizedDescription)
+        }
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NetworkError.unknown("Invalid Response")
+        }
+        
+        if httpResponse.statusCode == 404 {
+            throw NetworkError.notFound
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
