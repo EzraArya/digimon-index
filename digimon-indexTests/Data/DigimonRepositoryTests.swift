@@ -38,8 +38,8 @@ final class DigimonRepositoryTests: XCTestCase {
         
         let response = try await sut.getDigimonList(page: 0, pageSize: 8)
         
-        XCTAssertEqual(response.content.count, 1)
-        XCTAssertEqual(response.content.first?.name, "Agumon")
+        XCTAssertEqual(response.content?.count, 1)
+        XCTAssertEqual(response.content?.first?.name, "Agumon")
         XCTAssertEqual(response.pageable.currentPage, 0)
     }
     

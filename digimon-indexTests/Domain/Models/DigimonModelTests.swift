@@ -84,8 +84,8 @@ final class DigimonModelTests: XCTestCase {
         
         let response = try JSONDecoder().decode(DigimonListResponse.self, from: json)
         
-        XCTAssertEqual(response.content.count, 5)
-        XCTAssertEqual(response.content.first?.name, "Agumon")
+        XCTAssertEqual(response.content?.count, 5)
+        XCTAssertEqual(response.content?.first?.name, "Agumon")
         XCTAssertEqual(response.pageable.currentPage, 0)
     }
 

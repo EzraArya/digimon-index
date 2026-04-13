@@ -45,7 +45,7 @@ final class DigimonNetworkServiceTests: XCTestCase {
         
         let result: DigimonListResponse = try await sut.request(endpoint: .digimonList(page: 0, pageSize: 20))
         
-        XCTAssertEqual(result.content.first?.name, "Agumon")
+        XCTAssertEqual(result.content?.first?.name, "Agumon")
     }
     
     func test_request_throwsOnServerError() async throws {

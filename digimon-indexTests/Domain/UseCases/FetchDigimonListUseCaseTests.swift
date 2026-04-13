@@ -31,7 +31,7 @@ final class FetchDigimonListUseCaseTests: XCTestCase {
         
         let response = try await sut.execute(page: 0, pageSize: 8)
         
-        XCTAssertEqual(response.content.count, 1)
+        XCTAssertEqual(response.content?.count, 1)
         XCTAssertEqual(response.pageable.totalPages, 5)
     }
     
