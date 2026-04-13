@@ -22,6 +22,6 @@ struct Pageable: Codable, Equatable {
 }
 
 struct DigimonListResponse: Codable, Equatable {
-    let content: [DigimonListItem]
+    let content: [DigimonListItem]?
     let pageable: Pageable
 }

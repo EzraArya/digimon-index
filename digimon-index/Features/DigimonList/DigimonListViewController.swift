@@ -94,6 +94,29 @@ final class DigimonListViewController: UIViewController {
     
     private lazy var activityIndicator = UIActivityIndicatorView(style: .large)
     
+    private lazy var emptyStateView: UIStackView = {
+        let icon = UIImageView(image: UIImage(systemName: "magnifyingglass.circle"))
+        icon.tintColor = .systemGray
+        icon.contentMode = .scaleAspectFit
+        icon.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        
+        let label = UILabel()
+        label.text = "No Digimon found matching your filters."
+        label.textColor = .secondaryLabel
+        label.font = .systemFont(ofSize: 16)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        
+        let stack = UIStackView(arrangedSubviews: [icon, label])
+        stack.axis = .vertical
+        stack.spacing = 12
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        stack.isHidden = true // Hidden by default
+        return stack
+    }()
+    
     // MARK: - Init
     init(viewModel: DigimonListViewModel) {
         self.viewModel = viewModel
@@ -146,6 +169,7 @@ final class DigimonListViewController: UIViewController {
         
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(activityIndicator)
+        view.addSubview(emptyStateView)
     }
     
     private func setupConstraints() {
@@ -169,7 +193,12 @@ final class DigimonListViewController: UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
+            emptyStateView.centerXAnchor.constraint(equalTo: collectionView.centerXAnchor),
+            emptyStateView.centerYAnchor.constraint(equalTo: collectionView.centerYAnchor),
+            emptyStateView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            emptyStateView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40)
         ])
     }
     
@@ -197,8 +226,10 @@ final class DigimonListViewController: UIViewController {
                 
                 if self.viewModel.isLoading && self.viewModel.digimons.isEmpty {
                     self.activityIndicator.startAnimating()
+                    self.emptyStateView.isHidden = true
                 } else {
                     self.activityIndicator.stopAnimating()
+                    self.emptyStateView.isHidden = !self.viewModel.digimons.isEmpty
                 }
                 
                 var snapshot = NSDiffableDataSourceSnapshot<Int, Int>()
@@ -317,6 +348,7 @@ extension DigimonListViewController {
             buttons[2].configuration?.title = "X-Antibody"
         }
         
+        emptyStateView.isHidden = true
         Task { await viewModel.fetchDigimons(filter: activeFilter) }
     }
 }

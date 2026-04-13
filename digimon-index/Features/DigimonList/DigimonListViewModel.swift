@@ -38,7 +38,7 @@ final class DigimonListViewModel {
         
         do {
             let response = try await fetchDigimonListUseCase.execute(page: currentPage, pageSize: pageSize, filter: currentFilter)
-            digimons.append(contentsOf: response.content)
+            digimons.append(contentsOf: response.content ?? [])
             hasMorePages = !response.pageable.nextPage.isEmpty
             currentPage += 1
             onUpdate?()
@@ -59,7 +59,7 @@ final class DigimonListViewModel {
                 pageSize: pageSize,
                 filter: currentFilter
             )
-            digimons.append(contentsOf: response.content)
+            digimons.append(contentsOf: response.content ?? [])
             hasMorePages = !response.pageable.nextPage.isEmpty
             currentPage += 1
             onUpdate?()
