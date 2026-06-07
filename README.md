@@ -1,7 +1,7 @@
 # Digimon Index
 
 ## 🏛 Architecture
-This project follows a strict **Clean Architecture + MVVM** pattern to ensure the codebase remains maintainable, testable, and scalable.
+This project follows a strict **Clean Architecture + MVVM** pattern to ensure the codebase remains maintainable, testable, and scalable. Using API from https://digi-api.com/
 
 ### Layers:
 1. **Presentation (UI)**: ViewControllers handle zero business logic, focusing entirely on layout and state observation.
