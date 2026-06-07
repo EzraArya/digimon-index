@@ -1,4 +1,4 @@
-# NDS iOS Assignment
+# Digimon Index
 
 ## 🏛 Architecture
 This project follows a strict **Clean Architecture + MVVM** pattern to ensure the codebase remains maintainable, testable, and scalable.
